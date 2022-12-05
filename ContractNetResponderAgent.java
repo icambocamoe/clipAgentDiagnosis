@@ -26,6 +26,8 @@
  */
 package examples.protocols;
 
+import java.util.Arrays;
+
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -55,8 +57,8 @@ public class ContractNetResponderAgent extends Agent {
 		
         clips = new Environment(); 
 
-		loadKnowledge();
-
+		Object[] args = getArguments();
+		loadKnowledge(args[0]);
 		System.out.println("Agent "+getLocalName()+" waiting for CFP...");
 		
 		MessageTemplate template = MessageTemplate.and(
@@ -68,20 +70,27 @@ public class ContractNetResponderAgent extends Agent {
 			@Override
 			protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 				System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Action is "+cfp.getContent());
+				
 				ACLMessage propose = cfp.createReply();
 				//so my code do the diagnosis from the content of the proposing call that is the symptom
 				try{
 					clips.build("(defrule diagnosis (disease (name ?n) (symptom $? "+cfp.getContent()+" $?)) => (assert (foundDisease (foundName ?n) ) ))");
 					clips.run();
+					
 					FactAddressValue fv = clips.findFact("foundDisease");
 					String disease = fv.getSlotValue("foundName").toString();
+		
 					System.out.println("Agent "+getLocalName()+": Proposing "+disease);
 					
 					propose.setPerformative(ACLMessage.PROPOSE);
 					propose.setContent(String.valueOf(disease));//setting the found disease as the proposed diagnosis
 					
+					
 				}catch (Exception e) {
-					e.printStackTrace();
+					//e.printStackTrace();
+					
+					System.out.println("Agent "+getLocalName()+": Refuse");
+					throw new RefuseException("evaluation-failed");
 				  }
 				return propose;
 					
@@ -133,26 +142,39 @@ public class ContractNetResponderAgent extends Agent {
 	}
 */
 //metodo para cargar la base de conocimiento
-	public void loadKnowledge(){
+	public void loadKnowledge(Object a){
 		System.out.println("loading knowledge base"); 
                 try{
                     clips.build("(deftemplate disease(slot name)(multislot symptom)(multislot treatment))");
                     clips.build("(deftemplate foundDisease (slot foundName))");
 					
 					//clips.build("(deftemplate foundTreatment (multislot foundT))");
-                   
-                    clips.build("(deffacts diseases"
-                    +"(disease (name headache) (symptom \"sensitivity to light\" \"loss of appetite\" \"facial pain\" \"facial pressure\" \"dizziness\" \"blurred vision\")"
-                    +"(treatment \"resting in a quiet dark room\" \"administering a hot or cold compress\" \"gentle head massages\" \"over-the-counter medication\"))"
-                    +"(disease (name cold) (symptom \"runny nose\" \"stuffy nose\" \"sore throat\" \"cough\" \"congestion\")"
-                    +"(treatment \"plenty of rest\" \"proper hydration\" \"over-the-counter nasal decongestants\"))"
-                    +"(disease (name otitis) (symptom \"redness outer ear\" \"itch in ear\" \"ear pain\" \"pus in ear\")" 
-                    +"(treatment \"antibiotics\" \"ENT doctor\"))"
-                    +"(disease (name conjunctivitis) (symptom \"red eye\" \"itchi eye\" \"irritation eye\" \"discharge eye\" \"tearing eye\")" 
-                    +"(treatment   \"artificial tears\" \"cleaning the eyelids with a wet cloth\" \"applying cold or warm compresses\" \"antihistamine eyedrops\" ))"
-                    +"(disease (name pharyngitis) (symptom \"sore throat\" \"dry throat\" \"scratchy throat\") "
-                    +"(treatment \"drinking plenty of fluids\" \"gargling with warm salt water\" \"taking throat lozenges\" \"ENT doctor\")))");
-                    clips.reset();
+					if(a.equals("0")){
+						System.out.println(0);
+						clips.build("(deffacts diseases"
+						+"(disease (name headache) (symptom \"sensitivity to light\" \"loss of appetite\" \"facial pain\" \"facial pressure\" \"dizziness\" \"blurred vision\")"
+						+"(treatment \"resting in a quiet dark room\" \"administering a hot or cold compress\" \"gentle head massages\" \"over-the-counter medication\"))"
+						+"(disease (name cold) (symptom \"runny nose\" \"stuffy nose\" \"sore throat\" \"cough\" \"congestion\")"
+						+"(treatment \"plenty of rest\" \"proper hydration\" \"over-the-counter nasal decongestants\")))");
+						
+						
+					}
+                    if(a.equals("1")){
+						System.out.println(1);
+						clips.build("(deffacts diseases"
+						+"(disease (name otitis) (symptom \"redness outer ear\" \"itch in ear\" \"ear pain\" \"pus in ear\")" 
+						+"(treatment \"antibiotics\" \"ENT doctor\")))");
+					}
+					if(a.equals("2")){
+						System.out.println(2);
+						clips.build("(deffacts diseases"
+						+"(disease (name conjunctivitis) (symptom \"red eye\" \"itchi eye\" \"irritation eye\" \"discharge eye\" \"tearing eye\")" 
+						+"(treatment   \"artificial tears\" \"cleaning the eyelids with a wet cloth\" \"applying cold or warm compresses\" \"antihistamine eyedrops\" ))"
+						+"(disease (name pharyngitis) (symptom \"sore throat\" \"dry throat\" \"scratchy throat\") "
+						+"(treatment \"drinking plenty of fluids\" \"gargling with warm salt water\" \"taking throat lozenges\" \"ENT doctor\")))");
+						System.out.println(2);
+					}
+					clips.reset();
                 } catch (Exception e) {
                   e.printStackTrace();
                 }

@@ -35,6 +35,8 @@ import java.util.Date;
 import java.util.Vector;
 import java.util.Enumeration;
 
+import java.util.Scanner;
+
 /**
    This example shows how to implement the initiator role in 
    a FIPA-contract-net interaction protocol. In this case in particular 
@@ -46,7 +48,9 @@ import java.util.Enumeration;
  */
 public class ContractNetInitiatorAgent extends Agent {
 	private int nResponders;
-	
+	Scanner console = new Scanner(System.in);
+	String name;
+
 	protected void setup() { 
   	// Read names of responders as arguments
   	Object[] args = getArguments();
@@ -62,7 +66,9 @@ public class ContractNetInitiatorAgent extends Agent {
 			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
 			// We want to receive a reply in 10 secs
 			msg.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-			msg.setContent("\"runny nose\"");//hardcoded symptom
+			System.out.println("Enter one of your symptoms in the list: ");
+			name = console.nextLine();
+			msg.setContent("\""+name+"\"");//hardcoded symptom
 			
 			addBehaviour(new ContractNetInitiator(this, msg) {
 				
